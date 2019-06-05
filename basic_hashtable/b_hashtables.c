@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// C requires importing system / header files
+// This is when you import functionalities from other libraries. 
+//These could contain functions that you would like to use in  your program so you have to import them. 
+//You typically include these at the top of your C file. 
+//These could be header files from the standard library or header files that you write.
 
 // Hash tables notes:
 
@@ -99,6 +104,13 @@
 // 	- Resizing is O(n) BUT occurs at O(log n) frequency 
 
 
+// ## DAY 1
+// Your assignment is to implement a basic hash table in the `basic_hash_table` directory. 
+// You should be able to insert, read, and delete elements from the hash table. 
+// You do not need to handle collisions but should print a warning when you are overwriting an existing value.
+// Build your code by typing `make` then `./b_hashtable` in the terminal.
+// Run tests by typing `make tests`.
+
 /****
   Basic hash table key/value pair
  ****/
@@ -166,7 +178,21 @@ unsigned int hash(char *str, int max)
  ****/
 BasicHashTable *create_hash_table(int capacity)
 {
-  BasicHashTable *ht;
+  if (capacity < 1) {
+    return NULL;
+  }
+
+  BasicHashTable *ht = malloc(sizeof(BasicHashTable));
+  if (ht == NULL) {
+    return NULL;
+  }
+
+  ht->storage = calloc(capacity, sizeof(Pair)); // The difference in malloc and calloc is that malloc does not set the memory to zero where as calloc sets allocated memory to zero.
+  if (ht->storage == NULL) {
+    return (NULL);
+  }
+
+  ht->capacity = capacity;
 
   return ht;
 }
@@ -180,7 +206,18 @@ BasicHashTable *create_hash_table(int capacity)
  ****/
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
-
+  int i = hash(key, ht->capacity);
+  if (ht->storage[i] != NULL)
+  {
+    printf("\n** WARNING: overwriting previous values! **\n");
+    printf("\n");
+    destroy_pair(ht->storage[i]);
+    ht->storage[i] = create_pair(key, value);
+  }
+  else
+  {
+    ht->storage[i] = create_pair(key, value);
+  }
 }
 
 /****
@@ -190,6 +227,19 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
  ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
+  unsigned int i;
+  if (ht == NULL) {
+    return;
+  }
+
+  i = hash(key, ht->capacity);
+    if (ht->storage[i] != NULL)
+    {
+      printf("\n** Removing an entry! **\n");
+      printf("\n");
+      destroy_pair(ht->storage[i]);
+      ht->storage[i] = NULL;
+  }
 
 }
 
@@ -200,6 +250,13 @@ void hash_table_remove(BasicHashTable *ht, char *key)
  ****/
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
+  int i = hash(key, ht->capacity);
+  if (ht->storage[i] != NULL)
+  {
+    return ht->storage[i]->value;
+  }
+  printf("\n** Error! Was not able to retrieve the entry. **\n");
+  printf("\n");
   return NULL;
 }
 
@@ -210,9 +267,20 @@ char *hash_table_retrieve(BasicHashTable *ht, char *key)
  ****/
 void destroy_hash_table(BasicHashTable *ht)
 {
+  int i;
+  if(ht == NULL) {
+    return;
+  }
+
+  for (i = 0; i < ht->capacity; i++) {
+  if (ht->storage[i] != NULL) {
+    destroy_pair(ht->storage[i]);
+    }
+  }
+    free(ht->storage);
+    free(ht);
 
 }
-
 
 #ifndef TESTING
 int main(void)
