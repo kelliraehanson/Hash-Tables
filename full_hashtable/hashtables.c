@@ -152,7 +152,43 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
  */
 void hash_table_remove(HashTable *ht, char *key)
 {
+  unsigned int i = hash(key, ht->capacity);
 
+  if (ht->storage[i] == NULL)
+  {
+    printf("\n** The %s key wasn't found in this hash table. **\n", key);
+    printf("\n");
+    return;
+  }
+
+  LinkedPair *current = ht->storage[i];
+  if (strcmp(current->key, ht->storage[i]->key) == 0)
+  {
+    ht->storage[i] = current->next;
+    destroy_pair(current);
+    return;
+  }
+
+  LinkedPair *previous = current;
+  current = previous->next;
+
+  while (current != NULL && strcmp(current->key, key) != 0)
+  {
+    previous = current;
+    current = previous->next;
+  }
+
+  if (strcmp(current->key, key) == 0)
+  {
+    previous->next = current->next;
+    destroy_pair(current);
+    current = NULL;
+  }
+  else
+  {
+    printf("\n** The %s key wasn't found in this hash table. **\n", key);
+    printf("\n");
+  }
 }
 
 /*
@@ -165,6 +201,25 @@ void hash_table_remove(HashTable *ht, char *key)
  */
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
+  int i = hash(key, ht->capacity);
+  if (ht->storage[i] == NULL)
+  {
+    printf("\n** The %s wasn't found in this hash table. **\n", key);
+    printf("\n");
+    return NULL;
+  }
+
+  LinkedPair *node = ht->storage[i];
+  while (node != NULL && strcmp(node->key, key) != 0)
+  {
+    node = node->next;
+  }
+
+  if (node != NULL)
+  {
+    return node->value;
+  }
+
   return NULL;
 }
 
@@ -175,6 +230,18 @@ char *hash_table_retrieve(HashTable *ht, char *key)
  */
 void destroy_hash_table(HashTable *ht)
 {
+  int i;
+  if(ht == NULL) {
+    return;
+  }
+
+  for (i = 0; i < ht->capacity; i++) {
+  if (ht->storage[i] != NULL) {
+    destroy_pair(ht->storage[i]);
+    }
+  }
+    free(ht->storage);
+    free(ht);
 
 }
 
@@ -188,11 +255,25 @@ void destroy_hash_table(HashTable *ht)
  */
 HashTable *hash_table_resize(HashTable *ht)
 {
-  HashTable *new_ht;
+   HashTable *new_hashtable = create_hash_table(ht->capacity*2);
 
-  return new_ht;
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      LinkedPair *current = ht->storage[i];
+      while (current != NULL)
+      {
+        hash_table_insert(new_hashtable, current->key, current->value);
+        current = current->next;
+      }
+    }
+  }
+
+  destroy_hash_table(ht); // This destroys the old hash table (ht).
+
+  return new_hashtable;
 }
-
 
 #ifndef TESTING
 int main(void)
